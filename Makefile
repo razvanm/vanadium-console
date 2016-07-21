@@ -1,6 +1,6 @@
+GOROOT_V23 := $(shell pwd)/vanadium-go-1.3
 export GOPATH := $(shell pwd)
-export GOROOT := $(shell pwd)/vanadium-go-1.3
-export PATH := $(GOROOT)/bin:$(PATH)
+export PATH := $(GOROOT_V23)/bin:$(PATH)
 
 bin = app/main.nexe
 
@@ -8,7 +8,7 @@ bin = app/main.nexe
 all: $(bin)
 
 $(bin): main.go vanadium-go-1.3 src
-	GOOS=nacl GOARCH=amd64p32 go build -o $@ $<
+	GOROOT=$(GOROOT_V23) GOOS=nacl GOARCH=amd64p32 go build -o $@ $<
 
 vanadium-go-1.3:
 	git clone --depth 1 https://vanadium.googlesource.com/release.go.ppapi \
@@ -17,7 +17,7 @@ vanadium-go-1.3:
 
 src:
 	git clone --depth 1 https://github.com/vanadium/core.git src/v.io
-	go get github.com/shirou/gopsutil
+	go get -d github.com/shirou/gopsutil
 	cd src/github.com/shirou/gopsutil && patch -p1 < ../../../../gopsutil.diff
 	go get -d v.io/...
 
