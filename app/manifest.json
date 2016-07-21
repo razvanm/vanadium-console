@@ -1,0 +1,35 @@
+{
+  "manifest_version": 2,
+  "name": "Vanadium Console",
+  "version": "0.1",
+  "icons": {
+    "128": "icon-128.png"
+  },
+  "app": {
+    "background": {
+      "scripts": [
+        "background.js"
+      ]
+    }
+  },
+  "permissions": [
+    "identity",
+    {
+      "socket": [
+        "tcp-connect",
+        "resolve-host"
+      ]
+    }
+  ],
+  "oauth2": {
+    "client_id": "207767243339-uoeua8cj38d3vkbtf5qgr88ki5sv8enl.apps.googleusercontent.com",
+    "scopes": [
+      "email"
+    ]
+  },
+  "sockets": {
+    "tcp": {
+      "connect": "*:*"
+    }
+  }
+}
