@@ -17,9 +17,9 @@ vanadium-go-1.3:
 
 src:
 	git clone --depth 1 https://github.com/vanadium/core.git src/v.io
-	go get -d github.com/shirou/gopsutil
-	cd src/github.com/shirou/gopsutil && patch -p1 < ../../../../gopsutil.diff
 	go get -d v.io/...
+	# Go 1.3 doesn't know about the vendor/ directory.
+	rsync -a src/v.io/vendor/ src/
 
 .PHONY: clean
 clean:
