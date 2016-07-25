@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vanadium Console</title>
+  <style>
+    #bar {
+      display: flex;
+      width: 100%;
+    }
+
+    #address {
+      flex: 1;
+    }
+
+    #connect {
+      margin-left: 1em;
+    }
+
+    #location {
+      width: 100%;
+      font-style: italic;
+    }
+
+    #wrapper {
+      display: flex;
+      position: absolute;
+      top: 70px;
+    }
+
+    #page {
+      flex: 1;
+      border: 1px solid #f2f2f2;
+      height: 100%;
+    }
+  </style>
+</head>
+
+<body>
+  <script type="text/javascript" src="main.js"></script>
+  <embed id="main" width=0 height=0 src="main.nmf" type="application/x-nacl" />
+
+  <div id="bar">
+    <input id="address" autofocus>
+    <button id="connect">Connect</button>
+  </div>
+
+  <div id="location">&nbsp;</div>
+
+  <div id="wrapper">
+    <iframe id="page" src="page.html"></iframe>
+  </div>
+</body>
+</html>
