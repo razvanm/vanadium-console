@@ -24,6 +24,7 @@ import (
 	libsecurity "v.io/x/ref/lib/security"
 	_ "v.io/x/ref/runtime/factories/chrome"
 	"v.io/x/ref/runtime/protocols/lib/websocket"
+	"v.io/x/lib/vlog"
 )
 
 const oauthBlesser = "https://dev.v.io/auth/google/bless"
@@ -51,6 +52,9 @@ func crash(err error) {
 
 func newInstance(inst ppapi.Instance) ppapi.InstanceHandlers {
 	runtime.GOMAXPROCS(4)
+	// How to turn on verbose logging.
+	//vlog.Log.Configure(vlog.Level(2), vlog.LogToStderr(true))
+	vlog.Log.Configure(vlog.LogToStderr(true))
 	// Give the websocket interface the ppapi instance.
 	websocket.PpapiInstance = inst
 	ctx, _ := v23.Init()
