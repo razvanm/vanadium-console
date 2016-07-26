@@ -7,7 +7,7 @@ window.onmessage = function(event) {
     console.log('Update head with %d bytes and body with %d bytes',
         event.data.data.head.length, event.data.data.body.length);
     document.getElementsByTagName('head').item(0).innerHTML =
-        event.data.data.head;
+        '<style>body { font-size: initial; }</style>' + event.data.data.head;
     document.getElementsByTagName('body').item(0).innerHTML =
         event.data.data.body;
     break;
