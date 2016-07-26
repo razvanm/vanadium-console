@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"runtime/ppapi"
@@ -27,6 +28,11 @@ import (
 
 const oauthBlesser = "https://dev.v.io/auth/google/bless"
 
+type message struct {
+	Type string `json:"type"`
+	Data string `json:"data"`
+}
+
 type instance struct {
 	ppapi.Instance
 	logger logging.Logger
@@ -50,18 +56,34 @@ func newInstance(inst ppapi.Instance) ppapi.InstanceHandlers {
 	return i
 }
 
-func (inst *instance) HandleMessage(message ppapi.Var) {
-	inst.logger.Infof("Got to HandleMessage(%+v)", message)
-	token, err := message.AsString()
-	fmt.Printf("token = %q err = %v\n", token, err)
+func (inst *instance) HandleMessage(messageVar ppapi.Var) {
+	inst.logger.Infof("Got to HandleMessage(%+v)", messageVar)
+	msgJSON, err := messageVar.AsString()
+	fmt.Printf("message = %s err = %+v\n", msgJSON, err)
 	if err != nil {
+		inst.logger.Infof("Error: %+v", err)
+		return
+	}
+	var msg message
+	err = json.Unmarshal([]byte(msgJSON), &msg)
+	if err != nil {
+		inst.logger.Infof("Error: %+v", err)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(inst.ctx, 5*time.Second)
-	defer cancel()
+	switch msg.Type {
+	case "token":
+		inst.blessings(msg.Data)
+	case "url":
+		// TODO(razvanm): issue a debug/http.RawDo.
+		inst.glob("*")
+	}
+}
 
-	principal := v23.GetPrincipal(ctx)
+func (inst *instance) blessings(token string) {
+	fmt.Printf("token = %q\n", token)
+
+	principal := v23.GetPrincipal(inst.ctx)
 	bytes, err := principal.PublicKey().MarshalBinary()
 	if err != nil {
 		panic(err)
@@ -84,7 +106,7 @@ func (inst *instance) HandleMessage(message ppapi.Var) {
 	}
 	for attempt := 0; attempt < 5; attempt++ {
 		if attempt > 0 {
-			ctx.Infof("retrying")
+			inst.ctx.Infof("retrying")
 			time.Sleep(time.Second)
 		}
 		if body, err := inst.postBlessRequest(v); err == nil {
@@ -95,24 +117,21 @@ func (inst *instance) HandleMessage(message ppapi.Var) {
 			if err := libsecurity.SetDefaultBlessings(principal, blessings); err != nil {
 				panic(err)
 			}
-
 			fmt.Println(principal.BlessingStore().DebugString())
-
-			// Some operation to check if the blessings are working.
-			glob(ctx)
-
+			inst.glob("*")
 			return
 		} else {
-			ctx.Infof("error from oauth-blesser: %v", err)
+			inst.ctx.Infof("error from oauth-blesser: %v", err)
 		}
 	}
 }
 
-func glob(rootCtx *context.T) {
-	ctx, cancel := context.WithTimeout(rootCtx, 5*time.Second)
+func (inst *instance) glob(pattern string) {
+	ctx, cancel := context.WithTimeout(inst.ctx, 5*time.Second)
 	defer cancel()
 	ns := v23.GetNamespace(ctx)
-	c, err := ns.Glob(ctx, "*")
+	fmt.Printf("roots: %v\n", ns.Roots())
+	c, err := ns.Glob(ctx, pattern)
 
 	if err != nil {
 		panic(err)
@@ -123,7 +142,7 @@ func glob(rootCtx *context.T) {
 		case *naming.GlobReplyEntry:
 			fmt.Fprintf(os.Stdout, "%s\n", v.Value.Name)
 		case *naming.GlobReplyError:
-			fmt.Fprintf(os.Stderr, "Error: %s: %v\n", v.Value.Name, v.Value.Error)
+			fmt.Fprintf(os.Stderr, "Error: name: %q value: %+v\n", v.Value.Name, v.Value.Error)
 		}
 	}
 }

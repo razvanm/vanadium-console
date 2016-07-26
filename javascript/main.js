@@ -1,38 +1,68 @@
 var constants = require('./constants');
 
 function updatePage(head, body) {
-    document.getElementById('page').contentWindow.postMessage({
-      type: constants.URL,
-      data: {
-        head: decodeURIComponent(head),
-        body: decodeURIComponent(body)
-      }
-    }, '*');
+  document.getElementById('page').contentWindow.postMessage({
+    type: constants.URL,
+    data: {
+      head: decodeURIComponent(head),
+      body: decodeURIComponent(body)
+    }
+  }, '*');
 }
 
 window.onmessage = function(message) {
-    console.log(message);
-    switch (message.data.type) {
+  console.log(message);
+  switch (message.data.type) {
     case constants.TOKEN:
-        document.getElementById('main').postMessage(message.data.data);
-        break;
+      document.getElementById('main').postMessage(message.data.data);
+      break;
     case constants.URL:
-        document.getElementById('location').innerHTML = message.data.data;
-        updatePage(requestHead2, requestBody2);
-        break;
-    }
+      document.getElementById('location').innerHTML = message.data.data;
+      updatePage(requestHead2, requestBody2);
+      break;
+  }
 }
 
 window.onload = function() {
-    document.getElementById('main').addEventListener('message', function(message) {
-        console.log(message);
-    }, true);
+  document.getElementById('main').addEventListener('message', function(message) {
+    console.log(message);
+  }, true);
 
-    var port = chrome.runtime.connect();
-    port.onMessage.addListener(function (message) {
-        console.log(message);
-        document.getElementById('main').postMessage(message.data);
-    });
+  var main = document.getElementById('main');
+
+  var port = chrome.runtime.connect();
+  port.onMessage.addListener(function (message) {
+    switch (message.type) {
+      case constants.TOKEN:
+        main.postMessage(JSON.stringify({
+          type: constants.TOKEN,
+          data: message.data
+        }));
+        break;
+    }
+  });
+
+  var address = document.getElementById('address');
+  address.value = '/(dev.v.io:r:vprod:service:mounttabled)@ns.dev.v.io:8101';
+  address.selectionStart = address.selectionEnd = address.value.length;
+  address.addEventListener('keypress', function(event) {
+    if (event.code == "Enter") {
+      console.log(address.value);
+      main.postMessage(JSON.stringify({
+        type: constants.URL,
+        data: address.value
+      }));
+    }
+  }, true);
+
+    var connect = document.getElementById('connect');
+    connect.addEventListener('click', function(event) {
+      console.log(address.value);
+      main.postMessage(JSON.stringify({
+        type: constants.URL,
+        data: address.value
+      }));
+    }, true);
 
     // Send a test page to the 'page' iframe.
     updatePage(requestHead1, requestBody1);
@@ -40,9 +70,9 @@ window.onload = function() {
 };
 
 window.onresize = function() {
-    var style = document.getElementById('wrapper').style;
-    style.height = (document.body.scrollHeight - 70 - 15) + 'px';
-    style.width = (document.body.scrollWidth - 20) + 'px';
+  var style = document.getElementById('wrapper').style;
+  style.height = (document.body.scrollHeight - 70 - 15) + 'px';
+  style.width = (document.body.scrollWidth - 20) + 'px';
 }
 
 const requestBody1 = "%0A%0A%3Ch1%3E%2Fdebug%2Frequests%3C%2Fh1%3E%0A%0A%0A%3Ctable%20id%3D%22tr-status%22%3E%0A%09%0A%09%3Ctbody%3E%3Ctr%3E%0A%09%09%3Ctd%20class%3D%22family%22%3ERecv.%3C%2Ftd%3E%0A%0A%09%09%0A%09%09%3Ctd%20class%3D%22active%20empty%22%3E%0A%09%09%09%0A%09%09%09%5B0%20active%5D%0A%09%09%09%0A%09%09%3C%2Ftd%3E%0A%0A%09%09%0A%09%09%0A%09%09%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.%26amp%3Bb%3D0%22%3E%0A%09%09%5B%E2%89%A50s%5D%0A%09%09%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.05s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.1s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.2s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.5s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A51s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A510s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A5100s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.%26amp%3Bb%3D8%22%3E%0A%09%09%5Berrors%5D%0A%09%09%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%0A%09%09%0A%09%09%3Ctd%20class%3D%22latency-first%22%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.%26amp%3Bb%3D9%22%3E%5Bminute%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.%26amp%3Bb%3D10%22%3E%5Bhour%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.%26amp%3Bb%3D11%22%3E%5Btotal%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%0A%09%3C%2Ftr%3E%0A%09%0A%09%3Ctr%3E%0A%09%09%3Ctd%20class%3D%22family%22%3ERecv.__debug%2Fhttp%3C%2Ftd%3E%0A%0A%09%09%0A%09%09%3Ctd%20class%3D%22active%20%22%3E%0A%09%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D-1%22%3E%0A%09%09%09%5B1%20active%5D%0A%09%09%09%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%0A%09%09%0A%09%09%0A%09%09%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D0%22%3E%0A%09%09%5B%E2%89%A50s%5D%0A%09%09%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.05s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.1s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.2s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A50.5s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A51s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A510s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%20class%3D%22empty%22%3E%0A%09%09%0A%09%09%5B%E2%89%A5100s%5D%0A%09%09%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%09%09%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D8%22%3E%0A%09%09%5Berrors%5D%0A%09%09%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%0A%0A%09%09%0A%09%09%3Ctd%20class%3D%22latency-first%22%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D9%22%3E%5Bminute%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D10%22%3E%5Bhour%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%09%09%3Ctd%3E%0A%09%09%3Ca%20href%3D%22%3Ffam%3DRecv.__debug%252fhttp%26amp%3Bb%3D11%22%3E%5Btotal%5D%3C%2Fa%3E%0A%09%09%3C%2Ftd%3E%0A%0A%09%3C%2Ftr%3E%0A%09%0A%3C%2Ftbody%3E%3C%2Ftable%3E%0A%0A%0A%20%0A%0A%20%0A%0A%09%0A%0A";
