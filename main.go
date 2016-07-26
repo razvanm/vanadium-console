@@ -76,9 +76,15 @@ func (inst *instance) HandleMessage(messageVar ppapi.Var) {
 		inst.logger.Infof("Error: %+v", err)
 		return
 	}
+	// This handler is called by the Pepper API and doing anything blocking
+	// can cause unexpected behavior (expecting data via websocket for
+	// example).
+	go inst.internalHandleMessage(msgJSON)
+}
+
+func (inst *instance) internalHandleMessage(msgJSON string) {
 	var msg message
-	err = json.Unmarshal([]byte(msgJSON), &msg)
-	if err != nil {
+	if err := json.Unmarshal([]byte(msgJSON), &msg); err != nil {
 		inst.logger.Infof("Error: %+v", err)
 		return
 	}
