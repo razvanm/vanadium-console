@@ -41,6 +41,14 @@ type instance struct {
 
 var _ ppapi.InstanceHandlers = (*instance)(nil)
 
+// crash prints an error and then panics. This is helpful because nacl doesn't
+// seem to print a stack trace on panic (at least it doesn't by default in
+// Chrome).
+func crash(err error) {
+	fmt.Print(err)
+	panic(err)
+}
+
 func newInstance(inst ppapi.Instance) ppapi.InstanceHandlers {
 	runtime.GOMAXPROCS(4)
 	// Give the websocket interface the ppapi instance.
@@ -86,15 +94,15 @@ func (inst *instance) blessings(token string) {
 	principal := v23.GetPrincipal(inst.ctx)
 	bytes, err := principal.PublicKey().MarshalBinary()
 	if err != nil {
-		panic(err)
+		crash(err)
 	}
 	expiry, err := security.NewExpiryCaveat(time.Now().Add(10 * time.Minute))
 	if err != nil {
-		panic(err)
+		crash(err)
 	}
 	caveats, err := base64VomEncode([]security.Caveat{expiry})
 	if err != nil {
-		panic(err)
+		crash(err)
 	}
 	// This interface is defined in:
 	// https://godoc.org/v.io/x/ref/services/identity/internal/handlers#NewOAuthBlessingHandler
@@ -112,12 +120,15 @@ func (inst *instance) blessings(token string) {
 		if body, err := inst.postBlessRequest(v); err == nil {
 			var blessings security.Blessings
 			if err := base64VomDecode(string(body), &blessings); err != nil {
-				panic(err)
+				crash(err)
 			}
 			if err := libsecurity.SetDefaultBlessings(principal, blessings); err != nil {
-				panic(err)
+				crash(err)
 			}
 			fmt.Println(principal.BlessingStore().DebugString())
+			if err != nil {
+				crash(err)
+			}
 			inst.glob("*")
 			return
 		} else {
@@ -134,7 +145,7 @@ func (inst *instance) glob(pattern string) {
 	c, err := ns.Glob(ctx, pattern)
 
 	if err != nil {
-		panic(err)
+		crash(err)
 	}
 
 	for res := range c {
