@@ -19,8 +19,6 @@ src:
 	git clone --depth 1 https://github.com/vanadium/core.git vanadium-core
 	GOROOT=$(GOROOT_V23) GOPATH=$(shell pwd)/vanadium-core/go go get -d v.io/...
 	rsync -a vanadium-core/go/src .
-	# Go 1.3 doesn't know about the vendor/ directory.
-	rsync -a src/v.io/vendor/ src
 
 node_modules:
 	npm install
